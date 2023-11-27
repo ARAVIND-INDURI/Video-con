@@ -1,3 +1,2 @@
-const DB_NAME = "Videocon";
+export const DB_NAME = "Videocon";
 
-export default DB_NAME;

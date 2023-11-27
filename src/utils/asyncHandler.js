@@ -11,7 +11,7 @@
 //     }
 // }
 
-//Another method of Async Handler.
+// Another method of Async Handler.
 
 const asyncHandler = (requestHandler) => {
    return (req,res,next) => {
