@@ -11,3 +11,5 @@ class APiResponce{
 
     }
 }
+
+export {APiResponce}
