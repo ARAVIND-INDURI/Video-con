@@ -1,4 +1,4 @@
-import mangoose, { Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
@@ -88,4 +88,4 @@ UserSchema.methods.generateRefreshToken = function () {
    )
 }
 
-export const User = mangoose.model("user", UserSchema);
+export const User = mongoose.model("user", UserSchema);
