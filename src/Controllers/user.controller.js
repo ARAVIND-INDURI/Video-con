@@ -312,6 +312,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 
 });
 
+//Testing not done.
 const getUserCurrentProfile = asyncHandler(async (req, res) => {
    const { username } = req.params;
    if (!username?.trim()) {
