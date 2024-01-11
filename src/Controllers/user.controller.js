@@ -103,7 +103,6 @@ const loginUser = asyncHandler(async (req, res) => {
 
    // (1):
    const { email, username, password } = req.body;
-   console.log("email :"+ email,"user:"+username, "pass :" +password)
  
    if (!(email || username)) {
       throw new ApiError(400, "email or username required");
@@ -328,7 +327,7 @@ const getUserCurrentProfile = asyncHandler(async (req, res) => {
       {
          $lookup: {
             from: "subcriptions",
-            localField: _id,
+            localField: "_id",
             foreignField: "channel",
             as: "subcribers"
          }
@@ -336,7 +335,7 @@ const getUserCurrentProfile = asyncHandler(async (req, res) => {
       {
          $lookup: {
             from: "subcriptions",
-            localField: _id,
+            localField: "_id",
             foreignField: "subcriber",
             as: "subcribedTo"
          }
@@ -349,9 +348,7 @@ const getUserCurrentProfile = asyncHandler(async (req, res) => {
             channelsSubscribedToCount: {
                $size: "$subcribedTo"
             }
-         }
-      },
-      {
+         },      
          isSubcribed: {
             $cond: {
                if: { $in: [req.user?._id, "$subcribers.subcriber"] },
