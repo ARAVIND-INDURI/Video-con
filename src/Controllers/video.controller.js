@@ -1,8 +1,8 @@
 import mongoose, {isValidObjectId} from "mongoose"
 import {Video} from "../models/videos.models.js"
-import { User } from "../models/user.model.js"
-import {ApiError} from "../utils/ApiError.js"
-import {ApiResponse} from "../utils/ApiResponse.js"
+import { User } from "../models/user.models.js"
+import {ApiError} from "../utils/apiError.js"
+import {APiResponce} from "../utils/apiResponce.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 import {uploadOnCloudinary} from "../utils/Cloudinary.js"
 
@@ -21,11 +21,13 @@ const publishAVideo = asyncHandler(async (req, res) => {
      throw new ApiError(404,"title and description reqired")
     }
     // TODO: get video, upload to cloudinary, create video
-    const videoFilePath = req.files?.videoFile[0].path
-    const thumbnailFilePath = req.files.Thumbnail[0].path
-    // if (req.files && Array.isArray(req.files.videoFilePath) && req.files.videoFilePath.length > 0) {
-    //     videoFilePath = req.files.coverImage[0].path
-    // }
+    
+    if(!(req.files && Array.isArray(req.files.videoFile) && req.files.videoFile.length > 0)){
+        console.log(req.files)
+        throw new ApiError(400, "Video file is required!!!");
+    }
+    const videoFilePath = req.files?.videoFile[0]?.path;
+    const thumbnailFilePath = req.files?.thumbnail[0]?.path
 
     if(!videoFilePath)
     {
