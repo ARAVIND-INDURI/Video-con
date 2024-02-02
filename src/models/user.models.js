@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
+import {jwt} from "jsonwebtoken";
+import {bcrypt} from "bcrypt";
 
 const UserSchema = new Schema({
    username: {
@@ -25,7 +25,7 @@ const UserSchema = new Schema({
       unique: true,
    },
    avatar: {
-      type: String, //cloudnary link.
+      type: String,
       required: true,
    },
    coverImage: {
