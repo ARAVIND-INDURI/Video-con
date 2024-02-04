@@ -1,10 +1,12 @@
-import mongoose, {isValidObjectId} from "mongoose"
+import mongoose, {Promise, isValidObjectId} from "mongoose"
 import {Video} from "../models/videos.models.js"
 import { User } from "../models/user.models.js"
 import {ApiError} from "../utils/apiError.js"
 import {APiResponce} from "../utils/apiResponce.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
-import {uploadOnCloudinary} from "../utils/Cloudinary.js"
+import {uploadOnCloudinary,deleteFromCloudinary} from "../utils/Cloudinary.js"
+import { Like } from "../models/like.model.js"
+import { Comment } from "../models/comment.model.js"
 
 
 const getAllVideos = asyncHandler(async (req, res) => {
@@ -39,7 +41,6 @@ const publishAVideo = asyncHandler(async (req, res) => {
     }
     const videoFile = await uploadOnCloudinary(videoFilePath)
     const thumbnailFile = await uploadOnCloudinary(thumbnailFilePath);
-    console.log(videoFile);
     if(!videoFile)
     {
         throw new ApiError(401,"File not uploaded !!");
@@ -127,15 +128,37 @@ const updateVideo = asyncHandler(async (req, res) => {
 const deleteVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
     //TODO: delete video
-    const video = Video.findById(videoId)
+    if(!videoId.trim())
+    {
+        throw new ApiError(401,"video id is required");
+    }
+    const video = await Video.findById(videoId)
     if(!video)
     {
-        throw new ApiError(200,"Video is not avaliable")
+        throw new ApiError(400,"Video is not avaliable")
     }
-    video.findByIdAndDelete(video);
+    if( !(video?.owner?._id === req.user?._id )){
+        throw new ApiError(300,"unauthorized request")
+    }
+    const {_id,thumbnail,videoFile} = video;
+    const deleteResponce = await Video.findByIdAndDelete(_id);
+    console.log(deleteResponce)
+    if(deleteResponce)
+    {
+       await Promise.all([
+        Like.deleteMany({video: _id}),
+        Comment.deleteMany({video: _id}),
+        deleteFromCloudinary(videoFile, "Video"),
+        deleteFromCloudinary(thumbnail),
+    ]);
+    }
+    else{
+        throw new ApiError(500, "Something went wrong while deleting video");
+    }
     res
     .status(200)
-    .json(new APiResponce(200,"video deleted succesfully"))
+    .json(200,{},"Video deleted Succesfully")
+
 
 })
 
