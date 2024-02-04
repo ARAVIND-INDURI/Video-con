@@ -70,6 +70,15 @@ const publishAVideo = asyncHandler(async (req, res) => {
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params
     //TODO: get video by id
+    if(!videoId)
+    {
+        throw new ApiError(400,"video is not found")
+    }
+    const video = findById(videoId);
+    res
+    .status(200)
+    .json(200,video,"Video found succesfully")
+
 })
 
 const updateVideo = asyncHandler(async (req, res) => {
@@ -80,6 +89,10 @@ const updateVideo = asyncHandler(async (req, res) => {
     if(!title || !description)
     {
         throw new ApiError(401,"title and description are required")
+    }
+    if(!videoId)
+    {
+        throw new ApiError(400,"video is not avaliable")
     }
     const thumbnailFilePath = req.files?.path
     if(!thumbnailFilePath)
@@ -114,6 +127,15 @@ const updateVideo = asyncHandler(async (req, res) => {
 const deleteVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
     //TODO: delete video
+    const video = Video.findById(videoId)
+    if(!video)
+    {
+        throw new ApiError(200,"Video is not avaliable")
+    }
+    video.findByIdAndDelete(video);
+    res
+    .status(200)
+    .json(new APiResponce(200,"video deleted succesfully"))
 
 })
 
