@@ -299,7 +299,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
    const user = await User.findByIdAndUpdate(req.user?._id,
       {
          $set: {
-            avatar: coverImage.url
+            coverImage: coverImage.url
          }
       },
       { new: true }
