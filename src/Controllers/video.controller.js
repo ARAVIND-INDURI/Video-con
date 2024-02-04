@@ -1,4 +1,4 @@
-import mongoose, {Promise, isValidObjectId} from "mongoose"
+import mongoose, {isValidObjectId} from "mongoose"
 import {Video} from "../models/videos.models.js"
 import { User } from "../models/user.models.js"
 import {ApiError} from "../utils/apiError.js"
@@ -18,18 +18,17 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
     const { title, description} = req.body
 
-    if(!title?.trim() || !description?.trim())
+    if(!(title?.trim()) || !(description?.trim()))
     {
      throw new ApiError(404,"title and description reqired")
     }
-    // TODO: get video, upload to cloudinary, create video
-    
+    // TODO: get video, upload to cloudinary, create video.
+
     if(!(req.files && Array.isArray(req.files.videoFile) && req.files.videoFile.length > 0)){
-        console.log(req.files)
         throw new ApiError(400, "Video file is required!!!");
     }
-    const videoFilePath = req.files?.videoFile[0]?.path;
-    const thumbnailFilePath = req.files?.thumbnail[0]?.path
+    const videoFilePath = req.files.videoFile[0].path
+    const thumbnailFilePath = req.files.thumbnail[0].path
 
     if(!videoFilePath)
     {
@@ -59,6 +58,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
         Duration : Math.round(videoFile.duration)
 
     })
+    console.log(video._id)
     res
     .status(200)
     .json(
@@ -71,11 +71,11 @@ const publishAVideo = asyncHandler(async (req, res) => {
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params
     //TODO: get video by id
-    if(!videoId)
+    if(!videoId.trim())
     {
         throw new ApiError(400,"video is not found")
     }
-    const video = findById(videoId);
+    const video = await Video.findById(videoId);
     res
     .status(200)
     .json(200,video,"Video found succesfully")
@@ -128,16 +128,16 @@ const updateVideo = asyncHandler(async (req, res) => {
 const deleteVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
     //TODO: delete video
-    if(!videoId.trim())
-    {
-        throw new ApiError(401,"video id is required");
+    if(!videoId?.trim() || !isValidObjectId(videoId)){
+        throw new ApiError(400, "videoId is required or invalid");
     }
+    console.log(videoId)
     const video = await Video.findById(videoId)
     if(!video)
     {
         throw new ApiError(400,"Video is not avaliable")
     }
-    if( !(video?.owner?._id === req.user?._id )){
+    if( !(video?.owner?._id.toString() === req.user?._id.toString() )){
         throw new ApiError(300,"unauthorized request")
     }
     const {_id,thumbnail,videoFile} = video;
@@ -150,7 +150,7 @@ const deleteVideo = asyncHandler(async (req, res) => {
         Comment.deleteMany({video: _id}),
         deleteFromCloudinary(videoFile, "Video"),
         deleteFromCloudinary(thumbnail),
-    ]);
+    ])
     }
     else{
         throw new ApiError(500, "Something went wrong while deleting video");

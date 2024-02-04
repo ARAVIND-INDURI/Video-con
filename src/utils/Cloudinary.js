@@ -1,6 +1,6 @@
 import fs from "fs"
 import { v2 as cloudinary } from "cloudinary";
-
+import {extractPublicId} from "cloudinary-build-url";
 cloudinary.config({ 
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
   api_key: process.env.CLOUDINARY_API_KEY, 
@@ -43,4 +43,4 @@ const deleteFromCloudinary = async(url, resourceType = "image") => {
 
 
 
-export {uploadOnCloudinary , deleteFromCloudinary}
+export {uploadOnCloudinary ,deleteFromCloudinary}
