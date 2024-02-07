@@ -10,6 +10,67 @@ const getVideoComments = asyncHandler(async (req, res) => {
     //TODO: get all comments for a video
     const { videoId } = req.params
     const { page = 1, limit = 10 } = req.query
+    page = isNaN(page) ? 1 : Number(page)
+    limit = isNaN(limit) ? 1 : Number(limit)
+    if (!videoId.trim() || isValidObjectId(videoId)) {
+        throw new ApiError(401, "Video id is Required")
+    }
+    if (page <= 0) {
+        page = 1
+    }
+    if (limit <= 10) {
+        limit = 10
+    }
+
+    const comments = await mongoose.aggregate(
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(videoId)
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "owner",
+                pipeline: [
+                    {
+                        $project: {
+                            username: 1,
+                            avatar: 1,
+                            fullname: 1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $addFields: {
+                owner: {
+                    $first: "$owner"
+                }
+            }
+        },
+        {
+            $skip: (page - 1) * limit
+        },
+        {
+            $limit: limit
+        }
+    )
+
+    if(!comments){
+        throw new ApiError(401,"Cannot get all the comments")
+    }
+
+    res
+    .status(200)
+    .json(
+        new ApiResponse(200,comments,"Got all comments Succesfully")
+    )
+
+
 
 })
 
@@ -66,41 +127,37 @@ const updateComment = asyncHandler(async (req, res) => {
         { new: true }
     )
 
-    if(!comment)
-    {
-        throw new ApiError(401,"Comment is not avaliable")
+    if (!comment) {
+        throw new ApiError(401, "Comment is not avaliable")
     }
     res
-    .status(200)
-    .json(
-        new ApiResponse(200,comment,"Upated Comment Succesfully")
-    )
+        .status(200)
+        .json(
+            new ApiResponse(200, comment, "Upated Comment Succesfully")
+        )
 
 })
 
 const deleteComment = asyncHandler(async (req, res) => {
     // TODO: delete a comment
-    const {commentId} = req.params
-    if(!commentId || !isValidObjectId(commentId))
-    {
-        throw new ApiError(400,"Comment id is required")
+    const { commentId } = req.params
+    if (!commentId || !isValidObjectId(commentId)) {
+        throw new ApiError(400, "Comment id is required")
     }
     const comment = await findById(commentId)
-    if(!comment)
-    {
-        throw new ApiError(404,"Comment is not avaliable")
+    if (!comment) {
+        throw new ApiError(404, "Comment is not avaliable")
     }
-    if(!(comment.owner?.toString() == req.user?._id?.toString()))
-    {
-        throw new ApiError(301,"Comment can be only deleted by owner")
+    if (!(comment.owner?.toString() == req.user?._id?.toString())) {
+        throw new ApiError(301, "Comment can be only deleted by owner")
     }
-    const deleteResponce  = await Comment.findByIdAndDelete(comment._id)
-    
+    const deleteResponce = await Comment.findByIdAndDelete(comment._id)
+
     res
-    .status(200)
-    .json(
-        new ApiResponse(200,{},"Commment deleted Succesfuly")
-    )
+        .status(200)
+        .json(
+            new ApiResponse(200, {}, "Commment deleted Succesfuly")
+        )
 
 })
 

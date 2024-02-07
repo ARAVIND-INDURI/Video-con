@@ -91,6 +91,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
     const video = await Video.aggregate([
         matchOwner,
         joinOwner,
+        addFields,
         sortingStage,
         skipStage,
         limitStage
