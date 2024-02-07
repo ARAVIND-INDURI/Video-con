@@ -60,15 +60,15 @@ const getVideoComments = asyncHandler(async (req, res) => {
         }
     )
 
-    if(!comments){
-        throw new ApiError(401,"Cannot get all the comments")
+    if (!comments) {
+        throw new ApiError(401, "Cannot get all the comments")
     }
 
     res
-    .status(200)
-    .json(
-        new ApiResponse(200,comments,"Got all comments Succesfully")
-    )
+        .status(200)
+        .json(
+            new ApiResponse(200, comments, "Got all comments Succesfully")
+        )
 
 
 
