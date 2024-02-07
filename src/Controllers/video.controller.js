@@ -12,6 +12,7 @@ import { Comment } from "../models/comment.model.js"
 const getAllVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
     //TODO: get all videos based on query, sort, pagination
+    
     page = isNaN(page) ? 1 : Number(page)
     limit = isNaN(limit) ? 1 : Number(limit)
     if (page <= 0) {
