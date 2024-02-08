@@ -142,16 +142,15 @@ const getLikedVideos = asyncHandler(async (req, res) => {
             $replaceRoot: { newRoot: "$LikedVideos" }
         }
     ])
-    
-    if(!videos)
-    {
-        throw new ApiError(401,"Unable to Get Liked Videos")
+
+    if (!videos) {
+        throw new ApiError(401, "Unable to Get Liked Videos")
     }
     res
-    .status(200)
-    .json(
-        new ApiResponse(200,videos,"Retrived all Liked Videos")
-    )
+        .status(200)
+        .json(
+            new ApiResponse(200, videos, "Retrived all Liked Videos")
+        )
 })
 
 export {
