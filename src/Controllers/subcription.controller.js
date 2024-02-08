@@ -137,10 +137,10 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
         }
     ])
     res
-    .status(200)
-    .json(
-        new ApiResponse(200 , channels,"Subcribed channels retrived succesfully"))
-        
+        .status(200)
+        .json(
+            new ApiResponse(200, channels, "Subcribed channels retrived succesfully"))
+
 })
 
 export {
