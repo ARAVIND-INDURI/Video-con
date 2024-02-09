@@ -10,11 +10,11 @@ import { Comment } from "../models/comment.model.js"
 
 
 const getAllVideos = asyncHandler(async (req, res) => {
-    const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
+    let { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
     //TODO: get all videos based on query, sort, pagination
-    
+
     page = isNaN(page) ? 1 : Number(page)
-    limit = isNaN(limit) ? 1 : Number(limit)
+    limit = isNaN(limit) ? 10 : Number(limit)
     if (page <= 0) {
         page = 1
     }
@@ -41,13 +41,13 @@ const getAllVideos = asyncHandler(async (req, res) => {
     }
     if (userId && query) {
         matchOwner["$match"] = {
-            $and: {
+            $and:[ {
                 owner: new mongoose.Types.ObjectId(userId),
                 $or: [
-                    { title: { $regex: query, options: 'i' } },
-                    { description: { $regex: query, options: 'i' } }
+                    { title: { $regex: query, $options: 'i' } },
+                    { description: { $regex: query, $options: 'i' } }
                 ]
-            }
+            }]
         }
     }
 
@@ -96,12 +96,11 @@ const getAllVideos = asyncHandler(async (req, res) => {
         skipStage,
         limitStage
     ])
-
     res
-    .status(200)
-    .json(
-        new APiResponce(200,video,"got all videos succesfully")
-    )
+        .status(200)
+        .json(
+            new APiResponce(200, video, "got all videos succesfully")
+        )
 
 }
 )
@@ -170,7 +169,7 @@ const getVideoById = asyncHandler(async (req, res) => {
     if (!videoId.trim() || !isValidObjectId(videoId)) {
         throw new ApiError(400, "Video id is Required")
     }
-    const video = await Video.aggregate([
+    let video = await Video.aggregate([
         {
             $match: {
                 _id: new mongoose.Types.ObjectId(videoId)
@@ -213,7 +212,6 @@ const getVideoById = asyncHandler(async (req, res) => {
             }
         }
     ])
-    console.log(video)
     if (video.length > 0) {
         video = video[0]
     }
@@ -241,7 +239,7 @@ const updateVideo = asyncHandler(async (req, res) => {
     if (!videoId) {
         throw new ApiError(400, "video is not avaliable")
     }
-    const thumbnailFilePath = req.files?.path
+    const thumbnailFilePath = req.file?.path
     if (!thumbnailFilePath) {
         throw new ApiError(400, "Thumnail is required")
     }
@@ -261,6 +259,7 @@ const updateVideo = asyncHandler(async (req, res) => {
             new: true
         }
     )
+
     res
         .status(200)
         .json(
@@ -275,7 +274,6 @@ const deleteVideo = asyncHandler(async (req, res) => {
     if (!videoId?.trim() || !isValidObjectId(videoId)) {
         throw new ApiError(400, "videoId is required or invalid");
     }
-    console.log(videoId)
     const video = await Video.findById(videoId)
     if (!video) {
         throw new ApiError(400, "Video is not avaliable")
@@ -309,7 +307,8 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
     if (!videoId.trim() || !isValidObjectId(videoId)) {
         throw new ApiError(400, "video id is not avaliable")
     }
-    const { video } = await Video.findById(video);
+    const video  = await Video.findById(videoId)
+    console.log(video)
     if (!video) {
         throw new ApiError(400, "video is not avaliable")
     }
