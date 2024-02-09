@@ -1,18 +1,17 @@
 import mongoose, { isValidObjectId } from "mongoose";
 import { Comment } from "../models/comment.model.js";
 import { ApiError } from "../utils/apiError.js";
-import { ApiResponse } from "../utils/apiResponce.js";
+import { APiResponce } from "../utils/apiResponce.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { getCurrentUser } from "./user.controller.js";
 import { Video } from "../models/videos.models.js";
 
 const getVideoComments = asyncHandler(async (req, res) => {
     //TODO: get all comments for a video
     const { videoId } = req.params
-    const { page = 1, limit = 10 } = req.query
+    let { page = 1, limit = 10 } = req.query
     page = isNaN(page) ? 1 : Number(page)
     limit = isNaN(limit) ? 1 : Number(limit)
-    if (!videoId.trim() || isValidObjectId(videoId)) {
+    if (!videoId.trim() || !isValidObjectId(videoId)) {
         throw new ApiError(401, "Video id is Required")
     }
     if (page <= 0) {
@@ -22,10 +21,10 @@ const getVideoComments = asyncHandler(async (req, res) => {
         limit = 10
     }
 
-    const comments = await mongoose.aggregate(
+    const comments = await Comment.aggregate([
         {
             $match: {
-                _id: new mongoose.Types.ObjectId(videoId)
+                video: new mongoose.Types.ObjectId(videoId)
             }
         },
         {
@@ -58,16 +57,16 @@ const getVideoComments = asyncHandler(async (req, res) => {
         {
             $limit: limit
         }
-    )
+    ])
 
     if (!comments) {
         throw new ApiError(401, "Cannot get all the comments")
     }
-
+    
     res
         .status(200)
         .json(
-            new ApiResponse(200, comments, "Got all comments Succesfully")
+            new APiResponce(200, comments, "Got all comments Succesfully")
         )
 
 
@@ -76,20 +75,21 @@ const getVideoComments = asyncHandler(async (req, res) => {
 
 const addComment = asyncHandler(async (req, res) => {
     // TODO: add a comment to a video
-    const { videoId } = req.params;
-    const { content } = req.body;
-    const currentUser = getCurrentUser();
+    const { videoId } = req.params
+    const content = req.body?.content?.trim();
     if (!videoId || !isValidObjectId(videoId)) {
         throw new ApiError(400, "Video id is not avaliable !!")
     }
+    const currentUser = req.user
     const video = await Video.findById(videoId)
     if (!video) {
         throw new ApiError(401, "Video is not avaliable")
     }
-    if (!(content.trim())) {
+    console.log(content)
+    if (!content) {
         throw new ApiError(400, "content is Required for the comment !!")
     }
-    if (!currentUser || isValidObjectId(currentUser)) {
+    if (!currentUser || !isValidObjectId(currentUser)) {
         throw new ApiError(400, "user is Required !!")
     }
 
@@ -103,7 +103,7 @@ const addComment = asyncHandler(async (req, res) => {
     res
         .status(200)
         .json(
-            new ApiResponse(200, comment, "Added Comment Succesfullt")
+            new APiResponce(200, comment, "Added Comment Succesfullt")
         )
 
 })
@@ -133,7 +133,7 @@ const updateComment = asyncHandler(async (req, res) => {
     res
         .status(200)
         .json(
-            new ApiResponse(200, comment, "Upated Comment Succesfully")
+            new APiResponce(200, comment, "Upated Comment Succesfully")
         )
 
 })
@@ -144,7 +144,7 @@ const deleteComment = asyncHandler(async (req, res) => {
     if (!commentId || !isValidObjectId(commentId)) {
         throw new ApiError(400, "Comment id is required")
     }
-    const comment = await findById(commentId)
+    const comment = await Comment.findById(commentId)
     if (!comment) {
         throw new ApiError(404, "Comment is not avaliable")
     }
@@ -156,7 +156,7 @@ const deleteComment = asyncHandler(async (req, res) => {
     res
         .status(200)
         .json(
-            new ApiResponse(200, {}, "Commment deleted Succesfuly")
+            new APiResponce(200, {}, "Commment deleted Succesfuly")
         )
 
 })
