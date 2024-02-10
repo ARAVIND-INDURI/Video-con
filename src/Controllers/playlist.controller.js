@@ -1,8 +1,9 @@
 import mongoose, { isValidObjectId } from "mongoose"
 import { Playlist } from "../models/playlist.model.js"
-import { ApiError } from "../utils/ApiError.js"
-import { ApiResponse } from "../utils/ApiResponse.js"
+import { ApiError } from "../utils/apiError.js"
+import { APiResponce } from "../utils/apiResponce.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
+import { Video } from "../models/videos.models.js"
 
 
 const createPlaylist = asyncHandler(async (req, res) => {
@@ -24,7 +25,7 @@ const createPlaylist = asyncHandler(async (req, res) => {
     res
         .status(200)
         .json(
-            new ApiResponse(200, playlist, "Playlist Created Succesfully")
+            new APiResponce(200, playlist, "Playlist Created Succesfully")
         )
 })
 
@@ -55,7 +56,7 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
     res
         .status(200)
         .json(
-            new ApiResponse(200, playlists, "Retrived all playlists of User Succesfully")
+            new APiResponce(200, playlists, "Retrived all playlists of User Succesfully")
         )
 
 })
@@ -146,7 +147,7 @@ const getPlaylistById = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Playlist not found");
     }
 
-    res.status(200).json(new ApiResponse(
+    res.status(200).json(new APiResponce(
         200,
         playlist,
         "Retrived single playlist successfully"
@@ -163,13 +164,13 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
         new ApiError(401, "videoId is not avaliable or not valid")
     }
     const playlist = await Playlist.findById(playlistId)
-    if (playlist.owner._id !== req.user._id) {
+    if (playlist.owner._id.toString() !== req.user._id.toString()) {
         throw new ApiError(403, "You cannot add a video to playlist")
     }
     if (!playlist) {
         throw new ApiError(404, "Playlist not avaliable")
     }
-    const video = await Playlist.findById(videoId)
+    const video = await Video.findById(videoId)
     if (!video) {
         throw new ApiError(404, "video not avaliable")
     }
@@ -181,9 +182,9 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
     playlist.videos.push(video._id);
     await playlist.save();
 
-    res.status(200).json(new ApiResponse(
+    res.status(200).json(new APiResponce(
         200,
-        {},
+        playlist,
         "Add video to playlist success"
     ));
 
@@ -202,10 +203,10 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
     if (!playlist) {
         throw new ApiError(404, "Playlist not avaliable")
     }
-    if (playlist.owner._id !== req.user._id) {
+    if (playlist.owner._id.toString() !== req.user._id.toString()) {
         throw new ApiError(403, "You cannot add a video to playlist")
     }
-    const video = await Playlist.findById(videoId)
+    const video = await Video.findById(videoId)
     if (!video) {
         throw new ApiError(404, "video not avaliable")
     }
@@ -214,7 +215,7 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
 
     res
         .status(200)
-        .json(new ApiResponse(200, {}, "Video Removed from playlist Succesfully"))
+        .json(new APiResponce(200, {}, "Video Removed from playlist Succesfully"))
 
 })
 
@@ -228,14 +229,14 @@ const deletePlaylist = asyncHandler(async (req, res) => {
     if (!playlist) {
         throw new ApiError(400, "Playlist is not avaliable")
     }
-    if ((playlist.owner._id.toString) !== (req.user._id.toString())) {
+    if ((playlist.owner._id.toString()) !== (req.user._id.toString())) {
         throw new ApiError(403, "You cannot delete the playlist")
     }
     await Playlist.findByIdAndDelete(playlistId)
     res
         .status(200)
         .json(
-            new ApiResponse(200, {}, "Playlist is Deleted Succesfully")
+            new APiResponce(200, {}, "Playlist is Deleted Succesfully")
         )
 })
 
@@ -243,7 +244,7 @@ const updatePlaylist = asyncHandler(async (req, res) => {
     const { playlistId } = req.params
     const { name, description } = req.body
     //TODO: update playlist
-    if (!playlistId.trim() || isValidObjectId(playlistId)) {
+    if (!playlistId.trim() || !isValidObjectId(playlistId)) {
         throw new ApiError(401, "playlist id is not avaliable or invalid ")
     }
     if (!name.trim() || !description.trim()) {
@@ -263,7 +264,7 @@ const updatePlaylist = asyncHandler(async (req, res) => {
     res
         .status(200)
         .json(
-            new ApiResponse(200, updatedPlaylist, "Playlist is updated Succesfully")
+            new APiResponce(200, updatedPlaylist, "Playlist is updated Succesfully")
         )
 })
 
