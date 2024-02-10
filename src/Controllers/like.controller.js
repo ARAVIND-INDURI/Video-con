@@ -1,9 +1,11 @@
 import mongoose, { isValidObjectId } from "mongoose"
 import { Like } from "../models/like.model.js"
 import { Video } from "../models/videos.models.js"
-import { ApiError } from "../utils/ApiError.js"
-import { ApiResponse } from "../utils/ApiResponse.js"
+import { ApiError } from "../utils/apiError.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
+import { Comment } from "../models/comment.model.js"
+import { APiResponce } from "../utils/apiResponce.js"
+import { Tweet } from "../models/tweet.model.js"
 
 const toggleVideoLike = asyncHandler(async (req, res) => {
     const { videoId } = req.params
@@ -17,19 +19,19 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
     }
     let likeing
     const likedAlready = await Like.findOne({ video: videoId, likedBy: req.user._id })
-    console.log(likedAlready)
     if (likedAlready) {
         await Like.deleteOne({ video: videoId, likedBy: likedAlready.likedBy })
         likeing = false
     }
     else {
         await Like.create({ video: videoId, likedBy: req.user._id })
+        likeing = true
     }
     const responceMessege = likeing ? "Like added Succesfully" : "Like removed Succesfully"
     res
         .status(200)
         .json(
-            new ApiResponse(200, responceMessege, "Video like togged succesfully")
+            new APiResponce(200, responceMessege, "Video like togged succesfully")
         )
 
 
@@ -53,13 +55,14 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     }
     else {
         await Like.create({ comment: commentId, likedBy: req.user._id })
+        isliking = true
     }
-    const responceMessege = likeing ? "Like added Succesfully" : "Like removed Succesfully"
+    const responceMessege = isliking ? "Like added Succesfully" : "Like removed Succesfully"
 
     res
         .status(200)
         .json(
-            new ApiResponse(200, responceMessege, "Comment like Toggled Succesfully")
+            new APiResponce(200, responceMessege, "Comment like Toggled Succesfully")
         )
 
 })
@@ -68,11 +71,11 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
     const { tweetId } = req.params
     //TODO: toggle like on tweet
     if (!tweetId || !isValidObjectId(tweetId)) {
-        throw new ApiError(401, "Comment id is not avaliable")
+        throw new ApiError(401, "tweet id is not avaliable")
     }
-    const tweet = await Comment.findById(tweetId)
+    const tweet = await Tweet.findById(tweetId)
     if (!tweet) {
-        throw new ApiError(401, "Comment is not avaliable")
+        throw new ApiError(401, "tweet is not avaliable")
     }
     let isliking
     const likedAlready = await Like.findOne({ tweet: tweetId, likedBy: req.user._id })
@@ -82,23 +85,25 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
     }
     else {
         await Like.create({ tweet: tweetId, likedBy: req.user._id })
+        isliking = true
     }
-    const responceMessege = likeing ? "Like added Succesfully" : "Like removed Succesfully"
+    const responceMessege = isliking ? "Like added Succesfully" : "Like removed Succesfully"
 
     res
         .status(200)
         .json(
-            new ApiResponse(200, responceMessege, "Tweet like Toggled Succesfully")
+            new APiResponce(200, responceMessege, "Tweet like Toggled Succesfully")
         )
 }
 )
 
 const getLikedVideos = asyncHandler(async (req, res) => {
     //TODO: get all liked videos
-    page = isNaN(page) ? 1 : Number(page)
-    limit = isNaN(page) ? 10 : Number(limit)
+    let page,limit;
+     page = isNaN(page) ? 1 : Number(page)
+     limit = isNaN(page) ? 10 : Number(limit)
 
-    const videos = await mongoose.aggregate([
+    const videos = await Like.aggregate([
         {
             $match: {
                 likedBy: new mongoose.Types.ObjectId(req.user._id),
@@ -149,7 +154,7 @@ const getLikedVideos = asyncHandler(async (req, res) => {
     res
         .status(200)
         .json(
-            new ApiResponse(200, videos, "Retrived all Liked Videos")
+            new APiResponce(200, videos, "Retrived all Liked Videos")
         )
 })
 

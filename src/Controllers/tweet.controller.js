@@ -1,8 +1,7 @@
 import mongoose, { isValidObjectId } from "mongoose"
 import { Tweet } from "../models/tweet.model.js"
-import { User } from "../models/user.model.js"
-import { ApiError } from "../utils/ApiError.js"
-import { ApiResponse } from "../utils/ApiResponse.js"
+import { ApiError } from "../utils/apiError.js"
+import { APiResponce } from "../utils/apiResponce.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 
 const createTweet = asyncHandler(async (req, res) => {
@@ -24,7 +23,7 @@ const createTweet = asyncHandler(async (req, res) => {
     res
         .status(200)
         .json(
-            new ApiResponse(200, tweet, "Tweet Created Succesfully")
+            new APiResponce(200, tweet, "Tweet Created Succesfully")
         )
 })
 
@@ -40,7 +39,7 @@ const getUserTweets = asyncHandler(async (req, res) => {
         limit = 10
     }
 
-    const tweets = await mongoose.aggregate([
+    const tweets = await Tweet.aggregate([
         {
             $match: {
                 owner: new mongoose.Types.ObjectId(userId)
@@ -81,13 +80,13 @@ const getUserTweets = asyncHandler(async (req, res) => {
 
     ])
     if (!tweets) {
-        throw new ApiError(500, "Unable to get all the Tweets")
+        throw new APiResponce(500, "Unable to get all the Tweets")
     }
 
     res
         .status(200)
         .json(
-            new ApiResponse(200, tweets, "Retrived all The tweets succesfully")
+            new APiResponce(200, tweets, "Retrived all The tweets succesfully")
         )
 
 })
@@ -118,7 +117,7 @@ const updateTweet = asyncHandler(async (req, res) => {
     res
         .status(200)
         .json(
-            new ApiResponse(200, tweet, "Tweet Updated SuccesFully")
+            new APiResponce(200, tweet, "Tweet Updated SuccesFully")
         )
 })
 
@@ -135,7 +134,7 @@ const deleteTweet = asyncHandler(async (req, res) => {
     await Tweet.findByIdAndUpdate(tweetId)
     res
         .status(200)
-        .json(new ApiResponse(200, {}, "Tweet Deleted Succesfully"))
+        .json(new APiResponce(200, {}, "Tweet Deleted Succesfully"))
 })
 
 export {
