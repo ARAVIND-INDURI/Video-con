@@ -1,7 +1,6 @@
 # Backend Project.
-
 use 
-# npm install 
 to install the dependencies required for the project.
-# npm run dev
+# npm install 
 to run
+# npm run dev
