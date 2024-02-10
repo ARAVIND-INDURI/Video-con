@@ -30,8 +30,8 @@ const createTweet = asyncHandler(async (req, res) => {
 const getUserTweets = asyncHandler(async (req, res) => {
     // TODO: get user tweets
     let { page = 1, limit = 10, userId } = req.params
-    page = NaN(page) ? 1 : Number(page)
-    limit = NaN(limit) ? 10 : Number(limit)
+    page = isNaN(page) ? 1 : Number(page)
+    limit = isNaN(limit) ? 10 : Number(limit)
     if (page <= 0) {
         page = 1
     }
@@ -64,7 +64,9 @@ const getUserTweets = asyncHandler(async (req, res) => {
         },
         {
             $addFields: {
-                $first: "$owner"
+                owner: {
+                    $first: "$owner"
+                }
             }
         },
         {
@@ -97,8 +99,8 @@ const updateTweet = asyncHandler(async (req, res) => {
     if (!tweetId.trim() || !isValidObjectId(tweetId)) {
         throw new ApiError("Inavalid or Unable to find Tweet Id")
     }
-    const content = req.body
-    if (!content.trim()) {
+    const content = req.body.content
+    if (!(content.trim())) {
         throw new ApiError(401, "content is required")
     }
     let tweet = await Tweet.findById(tweetId)
@@ -124,14 +126,14 @@ const updateTweet = asyncHandler(async (req, res) => {
 const deleteTweet = asyncHandler(async (req, res) => {
     //TODO: delete tweet
     const { tweetId } = req.params
-    if (!tweetId || isValidObjectId(tweetId)) {
+    if (!tweetId || !isValidObjectId(tweetId)) {
         throw new ApiError(400, "Tweet id is Not avalialble  or not valid")
     }
-    let tweet = await findById(tweetId)
-    if ((tweet.owner._id.toString()) !== (req.user._id)) {
+    let tweet = await Tweet.findById(tweetId)
+    if ((tweet.owner._id.toString()) !== (req.user._id.toString())) {
         throw new ApiError(401, "you cannot Delete the tweet")
     }
-    await Tweet.findByIdAndUpdate(tweetId)
+    await Tweet.findByIdAndDelete(tweetId)
     res
         .status(200)
         .json(new APiResponce(200, {}, "Tweet Deleted Succesfully"))

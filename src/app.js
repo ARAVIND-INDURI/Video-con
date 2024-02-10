@@ -31,6 +31,6 @@ app.use("/api/v1/users/",UserRouter);
 app.use("/api/v1/videos/",VideoRouter);
 app.use("/api/v1/comments/",CommentRouter);
 app.use("/api/v1/likes/",LikeRouter);
-app.use("/api/v1/tweets/",tweetRouter)
+app.use("/api/v1/tweets/",tweetRouter);
 
 export default app;
