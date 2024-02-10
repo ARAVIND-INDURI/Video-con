@@ -1,14 +1,12 @@
 import mongoose from "mongoose"
-import { Video } from "../models/videos.models.js"
-import { Subcription } from "../models/subcriptions.model.js"
-import { Like } from "../models/like.model.js"
-import { ApiError } from "../utils/ApiError.js"
-import { ApiResponse } from "../utils/ApiResponse.js"
+import { ApiError } from "../utils/apiError.js"
+import { APiResponce } from "../utils/apiResponce.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
+import { Video } from "../models/videos.models.js"
 
 const getChannelStats = asyncHandler(async (req, res) => {
     // TODO: Get the channel stats like total video views, total subscribers, total videos, total likes etc.
-    const channelStats = await mongoose.aggregate(
+    const channelStats = await Video.aggregate([
         {
             $match: {
                 owner: new mongoose.Types.ObjectId(req.user._id)
@@ -31,7 +29,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
         },
         {
             $group: {
-                id: null,
+                _id: null,
                 totalViews: {
                     $sum: "$views"
                 },
@@ -69,7 +67,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
                 owner: 0
             }
         }
-    )
+    ])
 
     if (!channelStats) {
         throw new ApiError(401, "Problem in Retriving Channel stats")
@@ -77,7 +75,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
     res
         .status(200)
         .json(
-            new ApiResponse(200, channelStats, "Succesfully Retrived Channel Stats")
+            new APiResponce(200, channelStats, "Succesfully Retrived Channel Stats")
         )
 })
 
@@ -89,18 +87,20 @@ const getChannelVideos = asyncHandler(async (req, res) => {
 
     const sortingStage = {}
     if (sortBy && sortType) {
-        sortStage["$sort"] = {
+        sortingStage["$sort"] = {
             [sortBy]: sortType === "asc" ? 1 : -1
         }
     } else {
-        sortStage["$sort"] = {
+        sortingStage["$sort"] = {
             createdAt: -1
         }
     }
 
-    const getAllVideos = await mongoose.aggregate([
+    const getAllVideos = await Video.aggregate([
         {
-            $match: new mongoose.Types.ObjectId(req.user._id)
+            $match: {
+                owner:new mongoose.Types.ObjectId(req.user._id)
+            }
         },
         sortingStage,
         {
@@ -119,10 +119,14 @@ const getChannelVideos = asyncHandler(async (req, res) => {
          $limit : limit
         }
     ])
+    if(!getAllVideos)
+    {
+        throw new ApiError(401,"Unable to get all videos")
+    }
     res
     .status(200)
     .json(
-        new ApiResponse(200,getAllVideos,"Retrived all Videos")
+        new APiResponce(200,getAllVideos,"Retrived all Videos")
     )
 
 })
