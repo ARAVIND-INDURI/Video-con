@@ -1,8 +1,8 @@
 import mongoose, { isValidObjectId } from "mongoose"
-import { User } from "../models/user.model.js"
-import { Subscription } from "../models/subcriptions.model.js"
-import { ApiError } from "../utils/ApiError.js"
-import { ApiResponse } from "../utils/ApiResponse.js"
+import { User } from "../models/user.models.js"
+import { Subcription } from "../models/subcriptions.model.js"
+import { ApiError } from "../utils/apiError.js"
+import { APiResponce } from "../utils/apiResponce.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 
 
@@ -18,20 +18,20 @@ const toggleSubscription = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Unable to find the Channel")
     }
     let subcribing
-    const alredySubcribed = await Subscription.findOne({ channel: channelId.trim(), subcriber: req.user._id })
+    const alredySubcribed = await Subcription.findOne({ channel: channelId.trim(), subcriber: req.user._id })
     if (alredySubcribed) {
-        await Subscription.deleteOne({ channel: channelId.trim(), subcriber: req.user._id })
+        await Subcription.deleteOne({ channel: channelId.trim(), subcriber: req.user._id })
         subcribing = false
     }
     else {
-        await Subscription.create({ channel: channelId.trim(), subcriber: req.user._id })
+        await Subcription.create({ channel: channelId.trim(), subcriber: req.user._id })
         subcribing = true
     }
 
     const messege = subcribing ? "Subcribed to Channel" : "UnSubcribed to channel"
     res
         .status(200)
-        .json(new ApiResponse(200, messege, "Toggled Subcription Succesfully"))
+        .json(new APiResponce(200, messege, "Toggled Subcription Succesfully"))
 })
 
 // controller to return subscriber list of a channel
@@ -40,7 +40,7 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     if (!channelId || !isValidObjectId(channelId)) {
         throw new ApiError(400, "Channel id is not avaliable or invalid")
     }
-    const subcribers = await mongoose.aggregate([
+    const subcribers = await Subcription.aggregate([
         {
             $match: {
                 channel: new mongoose.Types.ObjectId(channelId)
@@ -52,18 +52,20 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
                 localField: "subcriber",
                 foreignField: "_id",
                 as: "subcribers",
-                pipeline: {
-                    $project: {
-                        avatar: 1,
-                        username: 1,
-                        fullname: 1
+                pipeline: [
+                    {
+                        $project: {
+                            avatar: 1,
+                            username: 1,
+                            fullname: 1
+                        }
                     }
-                }
+                ]
             }
         },
         {
             $addFields: {
-                $subcribers: {
+                subcribers: {
                     $first: "$subcribers"
                 }
             }
@@ -83,35 +85,36 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     res
         .status(200)
         .json(
-            new ApiResponse(200, subcribers, "Retrived the all the Subcribers Succesfully")
+            new APiResponce(200, subcribers, "Retrived the all the Subcribers Succesfully")
         )
 })
 
 // controller to return channel list to which user has subscribed
 const getSubscribedChannels = asyncHandler(async (req, res) => {
-    const { subscriberId } = req.params
-    if (!subscriberId || !isValidObjectId(subscriberId)) {
+    const { userId } = req.params
+    if (!userId || !isValidObjectId(userId)) {
         throw new ApiError(400, "Subcriber id is not avaliable or invalid")
     }
 
-    const channels = await mongoose.aggregate([
+    const channels = await Subcription.aggregate([
         {
             $match: {
-                subcriber: new mongoose.Types.ObjectId(subscriberId)
+                subcriber: new mongoose.Types.ObjectId(userId)
             }
         },
         {
+
             $lookup: {
-                form: "users",
+                from: "users",
                 localField: "channel",
                 foreignField: "_id",
                 as: "channels",
                 pipeline: [
                     {
                         $project: {
-                            avatar: 1,
                             username: 1,
-                            fullname: 1
+                            fullname: 1,
+                            avatar: 1,
                         }
                     }
                 ]
@@ -119,7 +122,7 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
         },
         {
             $addFields: {
-                $channels: {
+                channels: {
                     $first: "$channels"
                 }
             }
@@ -139,7 +142,7 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
     res
         .status(200)
         .json(
-            new ApiResponse(200, channels, "Subcribed channels retrived succesfully"))
+            new APiResponce(200, channels, "Subcribed channels retrived succesfully"))
 
 })
 
